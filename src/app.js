@@ -1,22 +1,20 @@
 const express = require("express");
 
-const { adminAuth } = require("./middlewares/auth");
-
 const app = express();
 
-app.use("/admin", adminAuth);
-
-app.get("/admin/getAllData", (req, res, next) => {
-  res.send("Get all data from the first middleware");
+app.get("/getUserData", (req, res, next) => {
+  try {
+    throw new Error("Something went wrong");
+    res.send("User data");
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+  }
 });
 
-app.get("/admin/deleteUser", (req, res, next) => {
-  res.send("Delete user from the second middleware");
-});
-
-app.get("/user", (req, res, next) => {
-  console.log("Received 1");
-  res.send("User route");
+app.use("/", (err, req, res, next) => {
+  if (err) {
+    res.status(500).send("Internal Server Error");
+  }
 });
 
 app.listen(7777, () => {
