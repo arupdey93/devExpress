@@ -6,6 +6,8 @@ const { validateSignUpData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
+require("node:process").loadEnvFile();
+const { userAuth } = require("./middlewares/auth");
 
 app.use(express.json());
 app.use(cookieParser());
@@ -46,9 +48,14 @@ app.post("/login", async (req, res) => {
 
     if (isPasswordValid) {
       //  JWT
-      const token = await jwt.sign({ _id: user._id }, "DEV@Tinder$790");
+      const token = await jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: "1d",
+      });
       // cookie
-      res.cookie("accessToken", token);
+      res.cookie("accessToken", token, {
+        httpOnly: true,
+        expires: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000),
+      });
       res.send("Login successful!!!");
     } else {
       throw new Error("Incorrect creds");
@@ -58,22 +65,20 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.get("/profile", async (req, res) => {
+app.get("/profile", userAuth, async (req, res) => {
   try {
-    const { accessToken } = req.cookies;
-    if (!accessToken) {
-      throw new Error("Invalid token");
-    }
-
-    const decodedToken = await jwt.verify(accessToken, "DEV@Tinder$790");
-    const { _id } = decodedToken;
-
-    const user = await User.findById(_id);
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = req.user;
     res.send(user);
+  } catch (error) {
+    res.status(400).send("Error: " + error.message);
+  }
+});
+
+app.post("/sendConnectionRequest", userAuth, async (req, res) => {
+  try {
+    const user = req.user;
+
+    res.send("Connection request sent successfully by " + user.firstName);
   } catch (error) {
     res.status(400).send("Error: " + error.message);
   }
