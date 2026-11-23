@@ -29,6 +29,30 @@ app.post("/signup", async (req, res) => {
   }
 });
 
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+
+    // if (!validator.isEmail(emailId)) {
+    //   throw new Error("Email is not correct");
+    // }
+    const user = await User.findOne({ emailId });
+    if (!user) {
+      throw new Error("Incorrect creds");
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (isPasswordValid) {
+      res.send("Login successful");
+    } else {
+      throw new Error("Incorrect creds");
+    }
+  } catch (error) {
+    res.status(400).send("Error login: " + error.message);
+  }
+});
+
 app.get("/user", async (req, res) => {
   const { emailId } = req?.body;
 
