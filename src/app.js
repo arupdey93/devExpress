@@ -5,9 +5,8 @@ const User = require("./models/user");
 const { validateSignUpData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
-const jwt = require("jsonwebtoken");
-require("node:process").loadEnvFile();
 const { userAuth } = require("./middlewares/auth");
+require("node:process").loadEnvFile();
 
 app.use(express.json());
 app.use(cookieParser());
@@ -44,15 +43,12 @@ app.post("/login", async (req, res) => {
       throw new Error("Incorrect creds");
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.validatePassword(password);
 
     if (isPasswordValid) {
-      //  JWT
-      const token = await jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
-        expiresIn: "1d",
-      });
-      // cookie
-      res.cookie("accessToken", token, {
+      const accessToken = await user.getJWT();
+
+      res.cookie("accessToken", accessToken, {
         httpOnly: true,
         expires: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000),
       });
