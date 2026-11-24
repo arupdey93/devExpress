@@ -6,7 +6,7 @@ const userAuth = async (req, res, next) => {
   try {
     const { accessToken } = req.cookies;
     if (!accessToken) {
-      throw new Error("Access token not valid");
+      throw new Error("Access Token is not valid.");
     }
     const decodedObj = await jwt.verify(accessToken, process.env.JWT_SECRET);
 
